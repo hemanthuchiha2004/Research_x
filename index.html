@@ -1,0 +1,959 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>ResearchX - Multi-Agent Research Assistant</title>
+
+<style>
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: Arial, Helvetica, sans-serif;
+    background: #0a0f1c;
+    color: #e8eefc;
+    min-height: 100vh;
+}
+
+/* HEADER */
+header {
+    height: 70px;
+    background: #0d1425;
+    border-bottom: 1px solid #26324d;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 35px;
+}
+
+.logo {
+    font-size: 25px;
+    font-weight: bold;
+}
+
+.logo span {
+    color: #4da6ff;
+}
+
+.status {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: #8fa1c2;
+}
+
+.status-dot {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: #35d07f;
+    box-shadow: 0 0 10px #35d07f;
+}
+
+/* MAIN */
+.container {
+    width: 94%;
+    max-width: 1400px;
+    margin: 30px auto;
+}
+
+/* SEARCH */
+.search-box {
+    background: #111a2d;
+    border: 1px solid #293653;
+    border-radius: 14px;
+    padding: 22px;
+    margin-bottom: 25px;
+}
+
+.search-box h2 {
+    margin-bottom: 8px;
+}
+
+.search-box p {
+    color: #8292b0;
+    margin-bottom: 18px;
+}
+
+.input-row {
+    display: flex;
+    gap: 12px;
+}
+
+input {
+    flex: 1;
+    background: #080d18;
+    border: 1px solid #33425f;
+    color: white;
+    padding: 15px;
+    border-radius: 9px;
+    font-size: 15px;
+    outline: none;
+}
+
+input:focus {
+    border-color: #4da6ff;
+}
+
+button {
+    border: none;
+    border-radius: 9px;
+    padding: 0 25px;
+    background: #2379d9;
+    color: white;
+    font-size: 15px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+button:hover {
+    background: #318cf0;
+}
+
+button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* DASHBOARD */
+.dashboard {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 25px;
+}
+
+/* PIPELINE */
+.panel {
+    background: #111a2d;
+    border: 1px solid #293653;
+    border-radius: 14px;
+    padding: 22px;
+}
+
+.panel h3 {
+    margin-bottom: 20px;
+}
+
+.agent {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 14px;
+    margin-bottom: 10px;
+    border: 1px solid #26334e;
+    border-radius: 10px;
+    background: #0c1424;
+    transition: 0.3s;
+}
+
+.agent-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #182640;
+    font-size: 20px;
+}
+
+.agent-info {
+    flex: 1;
+}
+
+.agent-info strong {
+    display: block;
+    margin-bottom: 4px;
+}
+
+.agent-info small {
+    color: #7486a6;
+}
+
+.agent-status {
+    font-size: 12px;
+    color: #7183a3;
+}
+
+.agent.active {
+    border-color: #348cff;
+    box-shadow: 0 0 15px rgba(52,140,255,0.15);
+}
+
+.agent.active .agent-icon {
+    background: #174c88;
+}
+
+.agent.active .agent-status {
+    color: #4da6ff;
+}
+
+.agent.done {
+    border-color: #236b4c;
+}
+
+.agent.done .agent-icon {
+    background: #12432f;
+}
+
+.agent.done .agent-status {
+    color: #35d07f;
+}
+
+/* LOG */
+.log {
+    height: 285px;
+    overflow-y: auto;
+    background: #080d18;
+    border-radius: 10px;
+    padding: 15px;
+    font-family: monospace;
+    font-size: 13px;
+}
+
+.log-line {
+    margin-bottom: 9px;
+    color: #91a3c5;
+}
+
+.log-line span {
+    color: #4da6ff;
+}
+
+/* REPORT */
+.report {
+    margin-top: 25px;
+}
+
+.report-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 18px;
+}
+
+.confidence {
+    padding: 7px 13px;
+    border-radius: 20px;
+    background: #123e2c;
+    color: #35d07f;
+    font-size: 13px;
+}
+
+.report-content {
+    background: #0b1220;
+    border: 1px solid #273550;
+    border-radius: 12px;
+    padding: 20px;
+}
+
+.report-content h4 {
+    margin: 18px 0 8px;
+    color: #6eb5ff;
+}
+
+.report-content p {
+    line-height: 1.7;
+    color: #b4c1d8;
+}
+
+.source {
+    margin-top: 10px;
+    padding: 12px;
+    background: #111b2e;
+    border-left: 3px solid #4da6ff;
+    border-radius: 5px;
+    color: #9eacc4;
+}
+
+.warning {
+    margin-top: 15px;
+    padding: 12px;
+    border-left: 3px solid #e8b949;
+    background: #302814;
+    color: #e5c875;
+    border-radius: 5px;
+}
+
+/* STATS */
+.stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin-top: 25px;
+}
+
+.stat {
+    background: #111a2d;
+    border: 1px solid #293653;
+    border-radius: 10px;
+    padding: 16px;
+}
+
+.stat small {
+    color: #7486a6;
+}
+
+.stat strong {
+    display: block;
+    font-size: 22px;
+    margin-top: 5px;
+}
+
+/* MOBILE */
+@media(max-width: 850px) {
+    .dashboard {
+        grid-template-columns: 1fr;
+    }
+
+    .stats {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .input-row {
+        flex-direction: column;
+    }
+
+    button {
+        height: 48px;
+    }
+
+    header {
+        padding: 0 18px;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<header>
+    <div class="logo">
+        Research<span>X</span>
+    </div>
+
+    <div class="status">
+        <div class="status-dot"></div>
+        Multi-Agent System Online
+    </div>
+</header>
+
+
+<div class="container">
+
+    <!-- SEARCH -->
+    <div class="search-box">
+
+        <h2>Multi-Agent Research Assistant</h2>
+
+        <p>
+            Ask a question and watch specialized agents research,
+            compare, verify and summarize the answer.
+        </p>
+
+        <div class="input-row">
+
+            <input
+                id="query"
+                type="text"
+                placeholder="Example: What are the benefits of renewable energy?"
+            >
+
+            <button id="startBtn" onclick="startResearch()">
+                Start Research
+            </button>
+
+        </div>
+
+    </div>
+
+
+    <!-- DASHBOARD -->
+    <div class="dashboard">
+
+        <!-- AGENT PIPELINE -->
+        <div class="panel">
+
+            <h3>Agent Pipeline</h3>
+
+            <div class="agent" id="agent1">
+                <div class="agent-icon">🧠</div>
+
+                <div class="agent-info">
+                    <strong>Research Planner</strong>
+                    <small>Breaks the question into tasks</small>
+                </div>
+
+                <div class="agent-status">Waiting</div>
+            </div>
+
+
+            <div class="agent" id="agent2">
+                <div class="agent-icon">🔎</div>
+
+                <div class="agent-info">
+                    <strong>Information Gathering Agent</strong>
+                    <small>Collects sources and documents</small>
+                </div>
+
+                <div class="agent-status">Waiting</div>
+            </div>
+
+
+            <div class="agent" id="agent3">
+                <div class="agent-icon">📚</div>
+
+                <div class="agent-info">
+                    <strong>Source Comparison Agent</strong>
+                    <small>Compares multiple sources</small>
+                </div>
+
+                <div class="agent-status">Waiting</div>
+            </div>
+
+
+            <div class="agent" id="agent4">
+                <div class="agent-icon">✓</div>
+
+                <div class="agent-info">
+                    <strong>Fact-Checking Agent</strong>
+                    <small>Tests claims against evidence</small>
+                </div>
+
+                <div class="agent-status">Waiting</div>
+            </div>
+
+
+            <div class="agent" id="agent5">
+                <div class="agent-icon">⚠</div>
+
+                <div class="agent-info">
+                    <strong>Contradiction Agent</strong>
+                    <small>Detects conflicting information</small>
+                </div>
+
+                <div class="agent-status">Waiting</div>
+            </div>
+
+
+            <div class="agent" id="agent6">
+                <div class="agent-icon">✦</div>
+
+                <div class="agent-info">
+                    <strong>Summarization Agent</strong>
+                    <small>Creates the final verified summary</small>
+                </div>
+
+                <div class="agent-status">Waiting</div>
+            </div>
+
+        </div>
+
+
+        <!-- ACTIVITY -->
+        <div class="panel">
+
+            <h3>Agent Activity</h3>
+
+            <div class="log" id="log">
+
+                <div class="log-line">
+                    <span>[SYSTEM]</span> ResearchX initialized.
+                </div>
+
+                <div class="log-line">
+                    <span>[SYSTEM]</span> Waiting for research query...
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- STATS -->
+    <div class="stats">
+
+        <div class="stat">
+            <small>Sources Found</small>
+            <strong id="sourceCount">0</strong>
+        </div>
+
+        <div class="stat">
+            <small>Claims Checked</small>
+            <strong id="claimCount">0</strong>
+        </div>
+
+        <div class="stat">
+            <small>Conflicts</small>
+            <strong id="conflictCount">0</strong>
+        </div>
+
+        <div class="stat">
+            <small>Confidence</small>
+            <strong id="confidenceValue">--</strong>
+        </div>
+
+    </div>
+
+
+    <!-- REPORT -->
+    <div class="panel report">
+
+        <div class="report-header">
+
+            <h3>Evidence-Backed Research Report</h3>
+
+            <div class="confidence" id="confidenceBadge">
+                Waiting for research
+            </div>
+
+        </div>
+
+
+        <div class="report-content" id="report">
+
+            <p>
+                Enter a research question above and click
+                <b>Start Research</b>.
+            </p>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<script>
+
+/* =========================================
+   RESEARCHX SIMULATION
+========================================= */
+
+const agents = [
+    {
+        id: "agent1",
+        name: "Research Planner"
+    },
+    {
+        id: "agent2",
+        name: "Information Gathering Agent"
+    },
+    {
+        id: "agent3",
+        name: "Source Comparison Agent"
+    },
+    {
+        id: "agent4",
+        name: "Fact-Checking Agent"
+    },
+    {
+        id: "agent5",
+        name: "Contradiction Agent"
+    },
+    {
+        id: "agent6",
+        name: "Summarization Agent"
+    }
+];
+
+
+function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+
+function addLog(message, type = "AGENT") {
+
+    const log = document.getElementById("log");
+
+    const line = document.createElement("div");
+
+    line.className = "log-line";
+
+    line.innerHTML =
+        `<span>[${type}]</span> ${message}`;
+
+    log.appendChild(line);
+
+    log.scrollTop = log.scrollHeight;
+}
+
+
+function setAgentActive(index) {
+
+    agents.forEach((agent, i) => {
+
+        const element =
+            document.getElementById(agent.id);
+
+        element.classList.remove("active");
+
+        if (i < index) {
+
+            element.classList.add("done");
+
+            element.querySelector(
+                ".agent-status"
+            ).innerText = "Completed";
+
+        }
+
+        if (i === index) {
+
+            element.classList.add("active");
+
+            element.querySelector(
+                ".agent-status"
+            ).innerText = "Working...";
+
+        }
+
+    });
+}
+
+
+function completeAgent(index) {
+
+    const element =
+        document.getElementById(agents[index].id);
+
+    element.classList.remove("active");
+
+    element.classList.add("done");
+
+    element.querySelector(
+        ".agent-status"
+    ).innerText = "Completed";
+}
+
+
+async function startResearch() {
+
+    const query =
+        document.getElementById("query").value.trim();
+
+    if (!query) {
+
+        alert("Please enter a research question.");
+
+        return;
+    }
+
+
+    const button =
+        document.getElementById("startBtn");
+
+    button.disabled = true;
+
+    button.innerText = "Researching...";
+
+
+    /* RESET */
+
+    document.getElementById("log").innerHTML = "";
+
+    document.getElementById("report").innerHTML =
+        "<p>Research pipeline is running...</p>";
+
+    document.getElementById("sourceCount").innerText = "0";
+
+    document.getElementById("claimCount").innerText = "0";
+
+    document.getElementById("conflictCount").innerText = "0";
+
+    document.getElementById("confidenceValue").innerText = "--";
+
+    document.getElementById("confidenceBadge").innerText =
+        "Research in progress";
+
+
+    agents.forEach(agent => {
+
+        const element =
+            document.getElementById(agent.id);
+
+        element.classList.remove(
+            "active",
+            "done"
+        );
+
+        element.querySelector(
+            ".agent-status"
+        ).innerText = "Waiting";
+
+    });
+
+
+    addLog(
+        `New research query received: "${query}"`,
+        "USER"
+    );
+
+    await sleep(800);
+
+
+    /* AGENT 1 */
+
+    setAgentActive(0);
+
+    addLog(
+        "Breaking the question into research tasks..."
+    );
+
+    await sleep(1600);
+
+    addLog(
+        "Created research plan with multiple verification tasks."
+    );
+
+    completeAgent(0);
+
+
+    /* AGENT 2 */
+
+    setAgentActive(1);
+
+    addLog(
+        "Searching for relevant information and documents..."
+    );
+
+    await sleep(1200);
+
+    addLog(
+        "Source A discovered."
+    );
+
+    await sleep(500);
+
+    addLog(
+        "Source B discovered."
+    );
+
+    await sleep(500);
+
+    addLog(
+        "Source C discovered."
+    );
+
+    document.getElementById(
+        "sourceCount"
+    ).innerText = "3";
+
+    completeAgent(1);
+
+
+    /* AGENT 3 */
+
+    setAgentActive(2);
+
+    addLog(
+        "Comparing sources side-by-side..."
+    );
+
+    await sleep(1500);
+
+    addLog(
+        "Common information identified across sources."
+    );
+
+    addLog(
+        "Differences between sources identified."
+    );
+
+    completeAgent(2);
+
+
+    /* AGENT 4 */
+
+    setAgentActive(3);
+
+    addLog(
+        "Checking important claims against evidence..."
+    );
+
+    await sleep(1400);
+
+    document.getElementById(
+        "claimCount"
+    ).innerText = "8";
+
+    addLog(
+        "8 claims evaluated against available evidence."
+    );
+
+    addLog(
+        "Most claims supported by retrieved evidence."
+    );
+
+    completeAgent(3);
+
+
+    /* AGENT 5 */
+
+    setAgentActive(4);
+
+    addLog(
+        "Scanning sources for contradictions..."
+    );
+
+    await sleep(1300);
+
+    document.getElementById(
+        "conflictCount"
+    ).innerText = "1";
+
+    addLog(
+        "1 minor disagreement detected between sources."
+    );
+
+    completeAgent(4);
+
+
+    /* AGENT 6 */
+
+    setAgentActive(5);
+
+    addLog(
+        "Generating evidence-backed summary..."
+    );
+
+    await sleep(1600);
+
+    addLog(
+        "Research report generated successfully.",
+        "SYSTEM"
+    );
+
+    completeAgent(5);
+
+
+    /* FINAL REPORT */
+
+    document.getElementById(
+        "confidenceValue"
+    ).innerText = "High";
+
+    document.getElementById(
+        "confidenceBadge"
+    ).innerText = "High Confidence";
+
+
+    document.getElementById("report").innerHTML = `
+
+        <h4>Research Question</h4>
+
+        <p>
+            ${escapeHTML(query)}
+        </p>
+
+
+        <h4>Executive Summary</h4>
+
+        <p>
+            ResearchX processed the question through a
+            multi-agent research pipeline. The system first
+            planned the research tasks, gathered information,
+            compared sources, checked claims and identified
+            conflicting information before producing this summary.
+        </p>
+
+
+        <h4>Key Findings</h4>
+
+        <p>
+            • Multiple sources were considered instead of relying
+            on a single generated response.
+        </p>
+
+        <p>
+            • Important claims were checked against retrieved
+            evidence.
+        </p>
+
+        <p>
+            • Differences between sources were explicitly detected.
+        </p>
+
+        <p>
+            • The final answer was generated only after the
+            verification stages.
+        </p>
+
+
+        <h4>Evidence</h4>
+
+        <div class="source">
+            <b>Source A</b><br>
+            Retrieved evidence relevant to the research question.
+        </div>
+
+        <div class="source">
+            <b>Source B</b><br>
+            Independent information used for source comparison.
+        </div>
+
+        <div class="source">
+            <b>Source C</b><br>
+            Additional evidence used during fact checking.
+        </div>
+
+
+        <h4>Contradiction Analysis</h4>
+
+        <div class="warning">
+            One minor disagreement was detected between
+            retrieved sources. The conflict is flagged rather
+            than silently hidden.
+        </div>
+
+
+        <h4>Confidence Assessment</h4>
+
+        <p>
+            <b>High confidence</b> based on agreement across
+            retrieved sources and successful claim verification.
+        </p>
+
+
+        <h4>Transparency</h4>
+
+        <p>
+            The result can be traced through the pipeline:
+            planning → research → comparison → fact checking
+            → contradiction detection → summarization.
+        </p>
+
+    `;
+
+
+    button.disabled = false;
+
+    button.innerText = "Start New Research";
+
+}
+
+
+/* Prevent HTML injection */
+
+function escapeHTML(text) {
+
+    const div = document.createElement("div");
+
+    div.textContent = text;
+
+    return div.innerHTML;
+}
+
+</script>
+
+</body>
+</html>
